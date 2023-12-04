@@ -5,13 +5,14 @@
 
 .data
 input db ?, '$'; Almacenar el input
+progress db 32 dup ('0'), '$' ; Valores introducidos
+
+; Strings del programa
+msg_ask_input db "Escriba una letra:$"
+msg_wrong_ans db "Letra incorrecta$"
+msg_winner db "Ganaste$"
+msg_loser db "Perdiste$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
-message_start db "Escriba una letra:$"; Mensaje inicio
-message_end db "El valor escrito fue:$"; mensaje fin
-progress db 16 dup ('_'), "$" ; valores contestados
-
-
-test_word db "manzana$"
 
 ascii_art db "          $"
           db "          $"
@@ -94,15 +95,10 @@ ascii_art db "          $"
           db 0BAH, 0BAH, "        $"
           db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
 
-; Strings del programa
-msg_wrong_ans db "Letra incorrecta$"
-msg_winner db "Ganaste$"
-msg_loser db "Perdiste$"
+test_word db "manzana$"
 
-test_msg1 db "not found$"
-test_msg2 db "complete$"
+;string db '$$'
 
-string db '$$'
 .code
 inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
@@ -126,12 +122,20 @@ play_word proc near
     call init_progress ; inicializar el string de progreso
 
 read_word:
-    ; imprimir la palabra
-    lea dx, [si]
+
+    ; imprimir progreso
+    lea dx, progress
     call print
+
+    ; Imprimir ascii del ahorcado
+    mov ah, cl
+    call print_ahorcado
 
     ; leer caracter
     call read_char
+
+    ; limpiar pantalla
+    ;call clear_screen
     
     ; llenar progreso
     mov ah, input
@@ -155,10 +159,6 @@ char_continue:
     cmp dh, 1
     je word_finished
 
-    ; Imprimir ascii del ahorcado
-    mov ah, cl
-    call print_ahorcado
-
     ; control del bucle
     cmp cl, 8
     jl read_word
@@ -169,12 +169,19 @@ char_continue:
     jmp word_continue
 
 word_finished:
-     ; imprimir mensaje ganar
+    ; imprimir mensaje ganar
     lea dx, msg_winner
     call print
-    jmp word_continue
 
 word_continue:
+
+    ; imprimir progreso
+    lea dx, progress
+    call print
+
+    ; Imprimir ascii del ahorcado
+    mov ah, cl
+    call print_ahorcado
 
     ret
 play_word endp
@@ -192,28 +199,36 @@ init_progress proc near
 
     init_progress_fill:
 
-    ; escribir '_'
-    mov al, '_' 
-    mov [bx], al
+    ; escribir '_ '
+    mov ax, " _" 
+    mov [bx], ax
     
     inc di ; pasar a la siguiente letra de la palabra
-    inc bx ; pasar al siguiente caracter de progress
+    ; saltar 2 caracteres de progress
+    inc bx 
+    inc bx
     ; control del bucle
     inc cl
     cmp cl, ch
     jl init_progress_fill
 
-    init_progress_clear:
-    ; escribir '$'
-    mov al, '$'
-    mov [bx], al
+    cmp cl, 16
+    jl init_progress_clear
+    jmp init_process_continue
 
-    inc bx ; pasar al siguiente caracter de progress
+    init_progress_clear:
+    ; escribir '$$'
+    mov ax, "$$"
+    mov [bx], ax
+
+    inc bx; pasar al siguiente caracter de progress
+    inc bx; 
     ; control de bucle
     inc cl
     cmp cl, 16
-    jle init_progress_clear
+    jl init_progress_clear
 
+    init_process_continue:
     pop cx ; devolver cx a su valor original
     ret
 init_progress endp
@@ -253,6 +268,7 @@ modify_progress:
 continue_read_progress:
     inc di ; pasar a la siguiente letra de la palabra
     inc bx ; pasar al siguiente caracter de progress
+    inc bx
     ; control del bucle
     inc cl
     cmp cl, ch
@@ -260,12 +276,6 @@ continue_read_progress:
 
     ; Verificar si la palabra esta completa
     call check_progress
-
-    ; imprimir progreso
-    push dx
-    lea dx, progress
-    call print
-    pop dx;
     
     pop cx; cargar el valor inicial de cx al momento de invocar el procedimiento
 
@@ -288,6 +298,7 @@ check_progress_loop:
     cmp al, '_'
     je check_progress_false
 
+    inc bx
     inc bx ; pasar al siguiente caracter de progress
     ; Control de bucle
     inc cl
@@ -307,7 +318,7 @@ check_progress endp
 ; No recibe registros, el valor leido se almacena en la variable input
 read_char proc near
 
-    lea dx, message_start ; almacenar mensaje
+    lea dx, msg_ask_input ; almacenar mensaje
     call print
 
     mov ax, 0100H ; Leer por consola
@@ -318,12 +329,6 @@ read_char proc near
     lea dx, newline ; almacenar mensaje
     mov ax, 0900H ; Escribir nueva linea
     int 21H; llamar al SO
-
-    lea dx, message_end ; mensaje fin
-    call print
-
-    lea dx, input ; almacenar input
-    call print
 
     ret
 
@@ -383,6 +388,26 @@ print_ahorcado_loop:
     pop ax
     ret
 print_ahorcado endp
+
+clear_screen proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh,1bh ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+clear_screen endp
 
 ;;--metodo para imprimir el valor de un registro--;;
 ;	;recibe:
