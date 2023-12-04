@@ -14,6 +14,27 @@ msg_winner db "Ganaste$"
 msg_loser db "Perdiste$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
 
+;String del menu
+nombre1 db "Juan David Afanador Verjel - 1152247$"
+nombre2 db "Bryan Alejandro Vera Osorio - 1152277$"
+nombre3 db "Omar David Jaimes Molina - 1152263$"
+nombre4 db "Saimer Adrian Saavedra Rojas - 1152280$"
+salto db "$" ; Realiza un salto de linea
+
+message_menu db "Hola! Bienvenido a Ahorcado$" ; Mensaje menu1
+message_menu2 db "Selecciona el tipo de objeto:$" ; Mensaje menu2
+message_lines db "--------------------------------------------------------$" ; Lineas para separar el menu
+message_options db "----> 1. Frutas  ----> 2. Animales ----> 3. Transporte$" ; Mensaje tipos de objetos
+
+;Strings de variables
+fruta_ejemplo db "tamarindo" ; VARIABLE DE EJEMPLO SOLO PARA PRUEBAS
+frutas db "manzana$", "sandia$", "mango$"
+length_frutas db 7, 6, 5
+
+transporte_ejemplo db "bicitaxi" ; VARIABLE DE EJEMPLO, SOLO PARA PRUEBAS
+transporte db "carro$", "moto$", "bicicleta$"
+length_transporte db 5, 4, 9
+
 ascii_art db "          $"
           db "          $"
           db "          $"
@@ -104,6 +125,12 @@ inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
     mov ds, ax ; Establecer ds con el segmento de datos.
     
+    ;Imprimir menu
+    call print_menu
+
+    ;Seleccionar numero
+    call select_number
+
     lea si, test_word
     mov ch, 7
     call play_word
@@ -364,6 +391,90 @@ read_char proc near
 
 read_char endp
 
+;OMAR
+;Obtiene el numero que digite el usuario
+select_number proc near
+
+    call read_number ; Lee el numero que digitado
+
+    lea dx, salto ; Realiza un salto de línea
+    call print
+
+    ;cmp input, 1
+    ;je select_fruta
+
+    ;cmp input, 2
+    ;je select_transporte
+
+;select_fruta:
+    ;lea si, fruta_ejemplo
+    ;mov ch, 9
+    ;jmp finalizar
+
+;select_transporte:
+    ;lea si, transporte_ejemplo
+    ;mov ch, 8
+    ;jmp finalizar
+
+;finalizar:
+
+    ret
+select_number endp
+
+
+;Imprimir el menu
+print_menu proc near
+    
+    ;Imprimir integrantes
+    lea dx, nombre1
+    call print
+
+    lea dx, nombre2
+    call print
+    
+    lea dx, nombre3
+    call print
+
+    lea dx, nombre4
+    call print
+
+    lea dx, salto
+    call print
+
+    ;Imprimir mensaje menu
+    lea dx, message_menu 
+    call print
+
+    ;Imprimir lineas de separacion
+    lea dx, message_lines
+    call print
+
+    ;Imprimir mensaje menu2
+    lea dx, message_menu2
+    call print
+
+    ;Imprimir mensaje de opciones;
+    lea dx, message_options
+    call print
+    
+    ret
+print_menu endp
+
+;Leer numero
+read_number proc near
+
+    mov ax, 0100H ; Leer por consola
+    int 21H; llamar al SO
+    mov [input], al ; almacenar input
+
+    ; imprimir salto de linea
+    lea dx, newline ; almacenar mensaje
+    mov ax, 0900H ; Escribir nueva linea
+    int 21H; llamar al SO
+
+    ret
+read_number endp
+;OMAR
 
 ; Imprimir en consola
 ;    lea dx, texto
