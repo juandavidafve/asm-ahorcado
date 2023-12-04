@@ -103,7 +103,7 @@ test_word db "manzana$"
 inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
     mov ds, ax ; Establecer ds con el segmento de datos.
-
+    
     lea si, test_word
     mov ch, 7
     call play_word
@@ -118,6 +118,10 @@ inicio endp
 ; lea si, palabra
 ; mov ch, longitud
 play_word proc near
+    push ax; preserver el valor de ax
+    push cx; preserver el valor de cx
+    push dx; preserver el valor de dx
+
     mov cl, 0 ; definir el contador de errores en 0
     call init_progress ; inicializar el string de progreso
 
@@ -183,6 +187,10 @@ word_continue:
     mov ah, cl
     call print_ahorcado
 
+    pop dx; devolver dx a su valor original
+    pop cx; devolver cx a su valor original
+    pop ax; devolver ax a su valor original
+    
     ret
 play_word endp
 
@@ -191,7 +199,10 @@ play_word endp
 ;   lea si, palabra (ya proviene del metodo play_word)
 ;   mov ch, longitud_palabra (ya proviene del metodo play_word)
 init_progress proc near
+    push ax ; preserver el valor de ax
+    push bx ; preservar el valor de bx
     push cx ; preservar el valor de cx
+    push di ; preservar el valor de di
     
     mov cl, 0 ; indice del bucle
     lea bx, progress; acceder al string progress
@@ -229,7 +240,12 @@ init_progress proc near
     jl init_progress_clear
 
     init_process_continue:
-    pop cx ; devolver cx a su valor original
+
+    pop di; devolver di a su valor original
+    pop cx; devolver cx a su valor original
+    pop bx; devolver bx a su valor original
+    pop ax; devolver ax a su valor original
+
     ret
 init_progress endp
 
@@ -242,8 +258,10 @@ init_progress endp
 ; dl se encontro la letra 
 ; dh la palabra esta completa 
 fill_progress proc near
-    push cx ; guardar el valor de cx en la pila, para evitar que quede modificado cuando termine el procedimiento 
-    
+    push bx ; guardar el valor de bx en la pila
+    push cx ; guardar el valor de cx en la pila
+    push di ; guardar el valor de di en la pila
+
     ; ch longitud palabra
     ; cl control del ciclo
     ; di letra de la palabra
@@ -277,7 +295,9 @@ continue_read_progress:
     ; Verificar si la palabra esta completa
     call check_progress
     
-    pop cx; cargar el valor inicial de cx al momento de invocar el procedimiento
+    pop di; cargar el valor inicial de di
+    pop cx; cargar el valor inicial de cx
+    pop bx; cargar el valor inicial de bx
 
     ret
 fill_progress endp
@@ -288,7 +308,10 @@ fill_progress endp
 ; retorna
 ; dh 1 si la palabra esta completa, 0 si no esta completa
 check_progress proc near
+    push ax; guardar el valor original de ax
+    push bx; guardar el valor original de bx
     push cx; guardar valor original de cx
+
     mov dh, 1 ; la palabra esta completa
     mov cl, 0 ; indice del bucle
     lea bx, progress; acceder al string progress
@@ -298,8 +321,9 @@ check_progress_loop:
     cmp al, '_'
     je check_progress_false
 
+    ; Pasar a los siguientes 2 caracteres de progress
     inc bx
-    inc bx ; pasar al siguiente caracter de progress
+    inc bx
     ; Control de bucle
     inc cl
     cmp cl, ch
@@ -311,12 +335,16 @@ check_progress_false:
 
 check_progress_continue:
     pop cx; cargar el valor original de cx
+    pop bx; cargar el valor orignal de bx
+    pop ax; cargar el valor orignal de ax
     ret
 check_progress endp
 
 ; Leer un caracter
 ; No recibe registros, el valor leido se almacena en la variable input
 read_char proc near
+    push ax
+    push dx
 
     lea dx, msg_ask_input ; almacenar mensaje
     call print
@@ -330,6 +358,8 @@ read_char proc near
     mov ax, 0900H ; Escribir nueva linea
     int 21H; llamar al SO
 
+    pop dx
+    pop ax
     ret
 
 read_char endp
@@ -339,7 +369,9 @@ read_char endp
 ;    lea dx, texto
 ;    call print
 print proc near
-
+    push ax
+    push dx
+   
     mov ax, 0900H ; Escribir en consola
     int 21H; llamar al SO
 
@@ -347,6 +379,8 @@ print proc near
     mov ax, 0900H ; Escribir en consola
     int 21H; llamar al SO
 
+    pop dx
+    pop ax
     ret
 print endp
 
@@ -359,6 +393,7 @@ print_ahorcado proc near
     push cx
     push dx
     push si
+    push di
 
     mov cl, 0 ; indice del ciclo
     lea si, ascii_art ; Cadena ascii
@@ -382,6 +417,7 @@ print_ahorcado_loop:
     cmp cl, 8
     jl print_ahorcado_loop;
 
+    pop di
     pop si
     pop dx
     pop cx
