@@ -9,14 +9,100 @@ newline db 13, 10, '$' ; Caracteres de nueva linea
 message_start db "Escriba una letra:$"; Mensaje inicio
 message_end db "El valor escrito fue:$"; mensaje fin
 progress db 16 dup ('_'), "$" ; valores contestados
+
+
 test_word db "manzana$"
 
+ascii_art db "          $"
+          db "          $"
+          db "          $"
+          db "          $"
+          db "          $"
+          db "          $"
+          db "          $"
+          db 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, "        $" 
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "     ", 02FH , 0B3H, " $"
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "      ", 02FH , " $"
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "        $" 
+          db 0BAH, 0BAH, "        $"
+          db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "      ", 02FH , 05CH , '$'
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+          ;
+          db 0CBH, 0CBH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, " $"
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "      ", 'O', " $"
+          db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
+          db 0BAH, 0BAH, "      ", 0B3H, " $"
+          db 0BAH, 0BAH, "      ", 02FH , 05CH , '$'
+          db 0BAH, 0BAH, "        $"
+          db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
+
+; Strings del programa
 msg_wrong_ans db "Letra incorrecta$"
 msg_winner db "Ganaste$"
 msg_loser db "Perdiste$"
 
 test_msg1 db "not found$"
 test_msg2 db "complete$"
+
+string db '$$'
 .code
 inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
@@ -68,6 +154,10 @@ char_not_found:
 char_continue:
     cmp dh, 1
     je word_finished
+
+    ; Imprimir ascii del ahorcado
+    mov ah, cl
+    call print_ahorcado
 
     ; control del bucle
     cmp cl, 8
@@ -224,6 +314,11 @@ read_char proc near
     int 21H; llamar al SO
     mov [input], al ; almacenar input
 
+    ; imprimir salto de linea
+    lea dx, newline ; almacenar mensaje
+    mov ax, 0900H ; Escribir nueva linea
+    int 21H; llamar al SO
+
     lea dx, message_end ; mensaje fin
     call print
 
@@ -239,14 +334,6 @@ read_char endp
 ;    lea dx, texto
 ;    call print
 print proc near
-    
-    push dx
-
-    lea dx, newline ; almacenar mensaje
-    mov ax, 0900H ; Escribir en consola
-    int 21H; llamar al SO
-
-    pop dx
 
     mov ax, 0900H ; Escribir en consola
     int 21H; llamar al SO
@@ -258,99 +345,110 @@ print proc near
     ret
 print endp
 
+; Imprime el ahorcado
+; Recibe
+; ah contador de errores
 print_ahorcado proc near
-; Imprimir segun la cant de fallos
+    ; Almacenar los valores originales de cxdx
+    push ax
+    push cx
+    push dx
+    push si
 
-; 0 fallos
-;══════════
+    mov cl, 0 ; indice del ciclo
+    lea si, ascii_art ; Cadena ascii
+    lea di, [si] ; Caracter actual
 
-; 1 fallo
+    ; Calcular offset
+    mov al, 88
+    mul ah
 
-;╦╦
-;║║
-;║║
-;║║
-;║║
-;║║
-;║║
-;╩╩════════
+    add di, ax
+    
+print_ahorcado_loop:
+    ; imprimir el ascii
+    mov dx, di
+    call print
 
-; 2 fallos
-;╦╦═══════
-;║║
-;║║
-;║║
-;║║
-;║║
-;║║
-;╩╩════════
+    ; pasar al siguiente string
+    add di, 11
+    ; Control del ciclo
+    inc cl
+    cmp cl, 8
+    jl print_ahorcado_loop;
 
-; 3 fallos
-
-;╦╦═══════
-;║║
-;║║
-;║║      │
-;║║      │
-;║║
-;║║
-;╩╩════════
-
-; 4 fallos
-
-;╦╦═══════
-;║║
-;║║      
-;║║     /│
-;║║      │
-;║║
-;║║
-;╩╩════════
-
-; 5 fallos
-
-;╦╦═══════
-;║║
-;║║      
-;║║     /│\
-;║║      │
-;║║
-;║║
-;╩╩════════
-
-; 6 fallos
-
-;╦╦═══════
-;║║
-;║║      
-;║║     /│\
-;║║      │
-;║║     /
-;║║
-;╩╩════════
-
-; 7 fallos
-
-;╦╦═══════
-;║║
-;║║      
-;║║     /│\
-;║║      │
-;║║     / \
-;║║
-;╩╩════════
-
-; 8 fallos
-
-;╦╦══════╕
-;║║      │
-;║║      ☺
-;║║     /│\
-;║║      │
-;║║     / \
-;║║
-;╩╩════════
+    pop si
+    pop dx
+    pop cx
+    pop ax
     ret
 print_ahorcado endp
 
+;;--metodo para imprimir el valor de un registro--;;
+;	;recibe:
+;	;	ax: el numero a imprimir	
+;	printint proc near
+;		push ax
+;		push bx
+;		push cx
+;		push dx
+;		push si
+;			;; ----- INICIO DEL CODIGO DE IMPRIMIR, LO QUE QUIERA IMPRIMIR, METALO EN X
+;			mov cx, 0 ; contador de digitos
+;		to_stack: ;mete los digitos en la pila para reversarlos
+;		
+;			mov dx, 0 ; este guarda el residuo de la division
+;			inc cx ;+1 digito
+;			mov bx, 10 ;divisor
+;			
+;			div bx 
+;			push dx ;metemos ax mod 10 a la cola (dx)
+;			cmp ax, 0 ;si ax es 0, salimos
+;			jne to_stack     
+;		
+;		lea si, string
+;			
+;		to_string: ;pasa de la pila al string
+;			mov dx, 0
+;			pop dx
+;			add dx,48
+;			mov [si], dx
+;			inc si
+;			dec cx
+;			cmp cx, 0
+;			jne to_string
+;		imprimir:;imprime
+;			mov cl, '$'
+;			mov [si], cl
+;			lea dx, string
+;
+;			;output the string 
+;			;loaded in dx  
+;			mov ah,09h 
+;			int 21h  
+;
+;			;salto de linea
+;			MOV dl, 10
+;			MOV ah, 02h
+;			INT 21h
+;			MOV dl, 13
+;			MOV ah, 02h
+;			INT 21h
+;		mov cx, 10
+;		reset: ;resetea string, para almacenar el siguiente numero
+;			lea si, string
+;			mov dx, '$'
+;			mov [si], dx
+;			inc si
+;			dec cx
+;			cmp cx, 0
+;			jne reset
+;		xor cx, cx
+;		pop si
+;		pop dx
+;		pop cx
+;		pop bx
+;		pop ax
+;	ret
+;   printint endp
 end
