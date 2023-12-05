@@ -12,13 +12,24 @@ msg_ask_input db "Escriba una letra:$"
 msg_wrong_ans db "Letra incorrecta$"
 msg_winner db "Ganaste$"
 msg_loser db "Perdiste$"
+msg_next_word db "Presiona una tecla para jugar la siguiente palabra$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
 
 ;String del menu
-nombre1 db "Juan David Afanador Verjel - 1152247$"
-nombre2 db "Bryan Alejandro Vera Osorio - 1152277$"
-nombre3 db "Omar David Jaimes Molina - 1152263$"
-nombre4 db "Saimer Adrian Saavedra Rojas - 1152280$"
+logoe db "|-----------------------S-I-S-T-E-M-I-C-O-S---------------------------|$",0dh;
+logo1 db "|        /     #  #%  &                                               |$",0dh
+logo2 db "|        /     #  #%  &                                               |$",0dh
+logo3 db "|     . (################.        -===============================-   |$",0dh
+logo4 db "|  (((# #.(           ,  & ((((   | *********INTEGRANTES**********|   |$",0dh
+logo5 db "|     , #          *  ,  &        |===============================|   |$",0dh
+logo6 db "|     , #    &    &   ,  &        |                               |   |$",0dh
+logo7 db "|  %%%% # &&  (        % & %%%%   |     JUAN AFANADOR - 1152247   |   |$",0dh
+logo8 db "|     , #                &        |     OMAR JAIMES  - 1152263    |   |$",0dh
+logo9 db "|     , #            . & &        |      BRYAN VERA  - 1152277    |   |$",0dh
+logo10 db "|     , %&&&&&&&&&&&&&&&&(        |    SAIMER SAAVEDRA - 1152280  |   |$",0dh
+logo11 db "|        /     #  #%  &           |                               |   |$",0dh
+logo12 db "|        /     #  #%  &           '-------------------------------'   |$",0dh
+logop db "|-------------------ALTA-CALIDAD-ARQUITECTURA-DE-PC-------------------|$",0dh;
 salto db "$" ; Realiza un salto de linea
 
 message_menu db "Hola! Bienvenido a Ahorcado$" ; Mensaje menu1
@@ -27,13 +38,14 @@ message_lines db "--------------------------------------------------------$" ; L
 message_options db "----> 1. Frutas  ----> 2. Animales ----> 3. Transporte$" ; Mensaje tipos de objetos
 
 ;Strings de variables
-fruta_ejemplo db "tamarindo" ; VARIABLE DE EJEMPLO SOLO PARA PRUEBAS
 frutas db "manzana$", "sandia$", "mango$"
-length_frutas db 7, 6, 5
+frutas_lengths db 7, 6, 5
 
-transporte_ejemplo db "bicitaxi" ; VARIABLE DE EJEMPLO, SOLO PARA PRUEBAS
-transporte db "carro$", "moto$", "bicicleta$"
-length_transporte db 5, 4, 9
+animales db "perro$", "gato$", "murcielago$"
+animales_lengths db 5, 4, 10
+
+transportes db "carro$", "moto$", "bicicleta$"
+transportes_lengths db 5, 4, 9
 
 ascii_art db "          $"
           db "          $"
@@ -125,21 +137,69 @@ inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
     mov ds, ax ; Establecer ds con el segmento de datos.
     
-    ;Imprimir menu
+
+    call clear_screen
+
+    ;;Imprimir menu
     call print_menu
 
-    ;Seleccionar numero
-    call select_number
+    ;;Seleccionar opción
+    call select_option
 
-    lea si, test_word
-    mov ch, 7
-    call play_word
-
+    ; Empezar el juego
+    call play
+    
 salir:
     mov ax, 4C00H  ; Interrupcion de terminar
     int 21H        ; Llamada a la interrupcion
 
 inicio endp
+
+; Inicia el juego, itera cada palabra de una categoria
+; Recibe
+; si, arreglo de strings
+; bx, arreglo de longitudes de si
+play proc near
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+
+    ; Inicializar cl - control del ciclo
+    mov cl, 0
+
+    play_loop:
+
+    ; Guardar el valor de bx en ax
+    mov ax, [bx]
+    mov ah, 0
+
+    ; Mover a ch la cant de letras en la palabra
+    mov ch, al
+    call play_word
+
+    ; Mostrar mensaje de siguiente palabra
+    lea dx, msg_next_word
+    call read_char
+    
+    ; Pasar si a la siguiente palabra
+    add si, ax
+    inc si ; Agregar un caracter más para $
+    inc bx ; Pasar bx al siguiente numero
+
+    ; control del ciclo
+    inc cl
+    cmp cl, 3 ; Cant de palabras
+    jl play_loop
+
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+ret
+play endp
 
 ; Jugar con una palabra
 ; lea si, palabra
@@ -163,6 +223,7 @@ read_word:
     call print_ahorcado
 
     ; leer caracter
+    lea dx, msg_ask_input
     call read_char
 
     ; limpiar pantalla
@@ -368,74 +429,117 @@ check_progress_continue:
 check_progress endp
 
 ; Leer un caracter
-; No recibe registros, el valor leido se almacena en la variable input
+; Recibe dx, para mostrar un mensaje
+; El valor leido se almacena en la variable input
 read_char proc near
     push ax
-    push dx
-
-    lea dx, msg_ask_input ; almacenar mensaje
-    call print
 
     mov ax, 0100H ; Leer por consola
     int 21H; llamar al SO
     mov [input], al ; almacenar input
 
     ; imprimir salto de linea
+    push dx
     lea dx, newline ; almacenar mensaje
     mov ax, 0900H ; Escribir nueva linea
     int 21H; llamar al SO
-
     pop dx
+
     pop ax
     ret
 
 read_char endp
 
-;OMAR
 ;Obtiene el numero que digite el usuario
-select_number proc near
+; retorna
+; si, arreglo de cadenas
+; bx, arreglo de longitudes
+select_option proc near
 
-    call read_number ; Lee el numero que digitado
+select_option_loop:
 
-    lea dx, salto ; Realiza un salto de línea
-    call print
+    ; Lee el numero que digitado
+    push dx
+    mov dx, "$$"
+    call read_char 
+    pop dx
 
-    ;cmp input, 1
-    ;je select_fruta
+    cmp input, '1'
+    je select_fruta
 
-    ;cmp input, 2
-    ;je select_transporte
+    cmp input, '2'
+    je select_animal
 
-;select_fruta:
-    ;lea si, fruta_ejemplo
-    ;mov ch, 9
-    ;jmp finalizar
+    cmp input, '3'
+    je select_transporte
+    jmp select_option_loop
 
-;select_transporte:
-    ;lea si, transporte_ejemplo
-    ;mov ch, 8
-    ;jmp finalizar
+select_fruta:
+    lea si, frutas
+    lea bx, frutas_lengths
+    jmp finalizar
 
-;finalizar:
+select_transporte:
+    lea si, transportes
+    lea bx, transportes_lengths
+    jmp finalizar
+
+select_animal:
+    lea si, animales
+    lea bx, animales_lengths
+    jmp finalizar
+
+finalizar:
 
     ret
-select_number endp
+select_option endp
 
 
 ;Imprimir el menu
 print_menu proc near
+    push dx
     
-    ;Imprimir integrantes
-    lea dx, nombre1
-    call print
-
-    lea dx, nombre2
+     ;Imprimir integrantes
+    lea dx, logoe
     call print
     
-    lea dx, nombre3
+    lea dx, logo1
     call print
 
-    lea dx, nombre4
+    lea dx, logo2
+    call print
+
+    lea dx, logo3
+    call print
+
+    lea dx, logo4
+    call print
+
+    lea dx, logo5
+    call print
+
+    lea dx, logo6
+    call print
+
+    lea dx, logo7
+    call print
+
+    lea dx, logo8
+    call print
+    
+    lea dx, logo9
+    call print
+
+    lea dx, logo10
+    call print
+
+    lea dx, logo11
+    call print
+    
+    lea dx, logo12
+    call print
+ 
+    lea dx, logop
     call print
 
     lea dx, salto
@@ -457,6 +561,8 @@ print_menu proc near
     lea dx, message_options
     call print
     
+    pop dx
+
     ret
 print_menu endp
 
@@ -474,7 +580,6 @@ read_number proc near
 
     ret
 read_number endp
-;OMAR
 
 ; Imprimir en consola
 ;    lea dx, texto
@@ -543,7 +648,7 @@ clear_screen proc near ;procedimiento limpiar pantalla
     push dx
 
     mov ax,0600H ;funci¢n 06h
-    mov bh,1bh ;N£mero de atributo(colores)
+    mov bh,05h ;N£mero de atributo(colores)
     mov cx,0000h ;fila y columnas iniciales
     mov dx,184fh ;fila y columna finales
     int 10h ;interrupción 10h de la BIOS
