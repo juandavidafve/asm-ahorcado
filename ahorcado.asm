@@ -14,18 +14,18 @@ msg_winner db "Ganaste$"
 msg_loser db "Perdiste$"
 msg_next_word db "Presiona una tecla para jugar la siguiente palabra$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
+endstr db '$' ; Caracter de fin de string
 
 ;String del menu
-nombre1 db "Juan David Afanador Verjel - 1152247$"
-nombre2 db "Bryan Alejandro Vera Osorio - 1152277$"
-nombre3 db "Omar David Jaimes Molina - 1152263$"
-nombre4 db "Saimer Adrian Saavedra Rojas - 1152280$"
-salto db "$" ; Realiza un salto de linea
+msg_credits db "Juan David Afanador Verjel - 1152247", 13, 10
+            db "Bryan Alejandro Vera Osorio - 1152277", 13, 10
+            db "Omar David Jaimes Molina - 1152263", 13, 10
+            db "Saimer Adrian Saavedra Rojas - 1152280", 13, 10, '$'
 
-message_menu db "Hola! Bienvenido a Ahorcado$" ; Mensaje menu1
-message_menu2 db "Selecciona el tipo de objeto:$" ; Mensaje menu2
-message_lines db "--------------------------------------------------------$" ; Lineas para separar el menu
-message_options db "----> 1. Frutas  ----> 2. Animales ----> 3. Transporte$" ; Mensaje tipos de objetos
+msg_menu db "Hola! Bienvenido a Ahorcado", 13, 10
+         db "Selecciona el tipo de objeto:", 13, 10
+         db "--------------------------------------------------------", 13, 10
+         db "----> 1. Frutas  ----> 2. Animales ----> 3. Transporte$"
 
 ;Strings de variables
 frutas db "manzana$", "sandia$", "mango$"
@@ -118,8 +118,6 @@ ascii_art db "          $"
           db 0BAH, 0BAH, "        $"
           db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
 
-test_word db "manzana$"
-
 ;string db '$$'
 
 .code
@@ -132,7 +130,7 @@ inicio proc near
 
     ;;Seleccionar opción
     call select_option
-
+    
     ; Empezar el juego
     call play
     
@@ -166,10 +164,15 @@ play proc near
     mov ch, al
     call play_word
 
+    ; Saltar mensaje de siguiente palabra si ya está en la ultima
+    cmp cl, 2
+    je play_loop_skip_next_msg
+
     ; Mostrar mensaje de siguiente palabra
     lea dx, msg_next_word
     call read_char
     
+    play_loop_skip_next_msg:
     ; Pasar si a la siguiente palabra
     add si, ax
     inc si ; Agregar un caracter más para $
@@ -439,7 +442,7 @@ read_char proc near
 
 read_char endp
 
-;Obtiene el numero que digite el usuario
+;Obtiene la opcion que digite el usuario
 ; retorna
 ; si, arreglo de cadenas
 ; bx, arreglo de longitudes
@@ -449,10 +452,11 @@ select_option_loop:
 
     ; Lee el numero que digitado
     push dx
-    mov dx, "$$"
+    lea dx, endstr
     call read_char 
     pop dx
 
+    ; Compara el input con las opciones
     cmp input, '1'
     je select_fruta
 
@@ -483,62 +487,22 @@ finalizar:
     ret
 select_option endp
 
-
 ;Imprimir el menu
 print_menu proc near
     push dx
     
     ;Imprimir integrantes
-    lea dx, nombre1
+    lea dx, msg_credits
     call print
 
-    lea dx, nombre2
-    call print
-    
-    lea dx, nombre3
+    ; Imprimir menú
+    lea dx, msg_menu
     call print
 
-    lea dx, nombre4
-    call print
-
-    lea dx, salto
-    call print
-
-    ;Imprimir mensaje menu
-    lea dx, message_menu 
-    call print
-
-    ;Imprimir lineas de separacion
-    lea dx, message_lines
-    call print
-
-    ;Imprimir mensaje menu2
-    lea dx, message_menu2
-    call print
-
-    ;Imprimir mensaje de opciones;
-    lea dx, message_options
-    call print
-    
     pop dx
 
     ret
 print_menu endp
-
-;Leer numero
-read_number proc near
-
-    mov ax, 0100H ; Leer por consola
-    int 21H; llamar al SO
-    mov [input], al ; almacenar input
-
-    ; imprimir salto de linea
-    lea dx, newline ; almacenar mensaje
-    mov ax, 0900H ; Escribir nueva linea
-    int 21H; llamar al SO
-
-    ret
-read_number endp
 
 ; Imprimir en consola
 ;    lea dx, texto
@@ -600,25 +564,25 @@ print_ahorcado_loop:
     ret
 print_ahorcado endp
 
-clear_screen proc near ;procedimiento limpiar pantalla
-    push ax
-    push bx
-    push cx
-    push dx
-
-    mov ax,0600H ;funci¢n 06h
-    mov bh,1bh ;N£mero de atributo(colores)
-    mov cx,0000h ;fila y columnas iniciales
-    mov dx,184fh ;fila y columna finales
-    int 10h ;interrupción 10h de la BIOS
-    
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-
-    ret
-clear_screen endp
+;clear_screen proc near ;procedimiento limpiar pantalla
+;    push ax
+;    push bx
+;    push cx
+;    push dx
+;
+;    mov ax,0600H ;funci¢n 06h
+;    mov bh,1bh ;N£mero de atributo(colores)
+;    mov cx,0000h ;fila y columnas iniciales
+;    mov dx,184fh ;fila y columna finales
+;    int 10h ;interrupción 10h de la BIOS
+;    
+;    pop dx
+;    pop cx
+;    pop bx
+;    pop ax
+;
+;    ret
+;clear_screen endp
 
 ;;--metodo para imprimir el valor de un registro--;;
 ;	;recibe:
