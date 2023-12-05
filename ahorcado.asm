@@ -15,27 +15,30 @@ msg_loser db "Perdiste$"
 msg_next_word db "Presiona una tecla para jugar la siguiente palabra$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
 
-;String del menu
-logoe db "|-----------------------S-I-S-T-E-M-I-C-O-S---------------------------|$",0dh;
-logo1 db "|        /     #  #%  &                                               |$",0dh
-logo2 db "|        /     #  #%  &                                               |$",0dh
-logo3 db "|     . (################.        -===============================-   |$",0dh
-logo4 db "|  (((# #.(           ,  & ((((   | *********INTEGRANTES**********|   |$",0dh
-logo5 db "|     , #          *  ,  &        |===============================|   |$",0dh
-logo6 db "|     , #    &    &   ,  &        |                               |   |$",0dh
-logo7 db "|  %%%% # &&  (        % & %%%%   |     JUAN AFANADOR - 1152247   |   |$",0dh
-logo8 db "|     , #                &        |     OMAR JAIMES  - 1152263    |   |$",0dh
-logo9 db "|     , #            . & &        |      BRYAN VERA  - 1152277    |   |$",0dh
-logo10 db "|     , %&&&&&&&&&&&&&&&&(        |    SAIMER SAAVEDRA - 1152280  |   |$",0dh
-logo11 db "|        /     #  #%  &           |                               |   |$",0dh
-logo12 db "|        /     #  #%  &           '-------------------------------'   |$",0dh
-logop db "|-------------------ALTA-CALIDAD-ARQUITECTURA-DE-PC-------------------|$",0dh;
-salto db "$" ; Realiza un salto de linea
+;String logo e integrantes
+logoe db "|-----------------------S-I-S-T-E-M-I-C-O-S---------------------------|",13,10
+      db "|        /     #  #%  &                                               |",13,10
+      db "|        /     #  #%  &                                               |",13,10
+      db "|     . (################.        -===============================-   |",13,10
+      db "|  (((# #.(           ,  & ((((   | *********INTEGRANTES**********|   |",13,10
+      db "|     , #          *  ,  &        |===============================|   |",13,10
+      db "|     , #    &    &   ,  &        |                               |   |",13,10
+      db "|  %%%% # &&  (        % & %%%%   |     JUAN AFANADOR - 1152247   |   |",13,10
+      db "|     , #                &        |     OMAR JAIMES  - 1152263    |   |",13,10
+      db "|     , #            . & &        |      BRYAN VERA  - 1152277    |   |",13,10
+      db "|     , %&&&&&&&&&&&&&&&&(        |    SAIMER SAAVEDRA - 1152280  |   |",13,10
+      db "|        /     #  #%  &           |                               |   |",13,10
+      db "|        /     #  #%  &           '-------------------------------'   |",13,10
+      db "|-------------------ALTA-CALIDAD-ARQUITECTURA-DE-PC-------------------|$"
 
-message_menu db "Hola! Bienvenido a Ahorcado$" ; Mensaje menu1
-message_menu2 db "Selecciona el tipo de objeto:$" ; Mensaje menu2
-message_lines db "--------------------------------------------------------$" ; Lineas para separar el menu
-message_options db "----> 1. Frutas  ----> 2. Animales ----> 3. Transporte$" ; Mensaje tipos de objetos
+salto db "$" ; Realiza un salto de linea
+menu_option db "|---------------------------------------------------------------------|",13,10
+            db "|       BIENVENIDOS A AHORCADO                                        |",13,10
+            db "|                                                   __    ___  __  __ |",13,10
+            db "|       Elige la tematica:                         /__\  / __)(  \/  )|",13,10
+            db "|    1. Fruta         2. Animal                   /(__)\ \__ \ )    ( |",13,10
+            db "|          3. Transporte                         (__)(__)(___/(_/\/\_)|",13,10
+            db "|---------------------------------------------------------------------|$"
 
 ;Strings de variables
 frutas db "manzana$", "sandia$", "mango$"
@@ -404,7 +407,7 @@ check_progress proc near
     mov cl, 0 ; indice del bucle
     lea bx, progress; acceder al string progress
 
-check_progress_loop:
+check_progress_loop: 
     mov al, [bx]
     cmp al, '_'
     je check_progress_false
@@ -465,12 +468,15 @@ select_option_loop:
     pop dx
 
     cmp input, '1'
+    call color_fruta
     je select_fruta
 
     cmp input, '2'
+    call color_animal
     je select_animal
 
     cmp input, '3'
+    call color_transporte
     je select_transporte
     jmp select_option_loop
 
@@ -502,65 +508,13 @@ print_menu proc near
      ;Imprimir integrantes
     lea dx, logoe
     call print
-    
-    lea dx, logo1
-    call print
-
-    lea dx, logo2
-    call print
-
-    lea dx, logo3
-    call print
-
-    lea dx, logo4
-    call print
-
-    lea dx, logo5
-    call print
-
-    lea dx, logo6
-    call print
-
-    lea dx, logo7
-    call print
-
-    lea dx, logo8
-    call print
-    
-    lea dx, logo9
-    call print
-
-    lea dx, logo10
-    call print
-
-    lea dx, logo11
-    call print
-    
-    lea dx, logo12
-    call print
- 
-    lea dx, logop
-    call print
 
     lea dx, salto
     call print
 
-    ;Imprimir mensaje menu
-    lea dx, message_menu 
+    ;Imprimir menu optiones
+    lea dx, menu_option 
     call print
-
-    ;Imprimir lineas de separacion
-    lea dx, message_lines
-    call print
-
-    ;Imprimir mensaje menu2
-    lea dx, message_menu2
-    call print
-
-    ;Imprimir mensaje de opciones;
-    lea dx, message_options
-    call print
-    
     pop dx
 
     ret
@@ -648,7 +602,7 @@ clear_screen proc near ;procedimiento limpiar pantalla
     push dx
 
     mov ax,0600H ;funci¢n 06h
-    mov bh,05h ;N£mero de atributo(colores)
+    mov bh,02h ;N£mero de atributo(colores)
     mov cx,0000h ;fila y columnas iniciales
     mov dx,184fh ;fila y columna finales
     int 10h ;interrupción 10h de la BIOS
@@ -660,6 +614,67 @@ clear_screen proc near ;procedimiento limpiar pantalla
 
     ret
 clear_screen endp
+
+color_fruta proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh, 70h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+color_fruta endp
+
+color_animal proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh,10h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+color_animal endp
+
+color_transporte proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh,27h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+color_transporte endp
+
 
 ;;--metodo para imprimir el valor de un registro--;;
 ;	;recibe:
