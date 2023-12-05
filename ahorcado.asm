@@ -16,26 +16,40 @@ msg_next_word db "Presiona una tecla para jugar la siguiente palabra$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
 endstr db '$' ; Caracter de fin de string
 
-;String del menu
-msg_credits db "Juan David Afanador Verjel - 1152247", 13, 10
-            db "Bryan Alejandro Vera Osorio - 1152277", 13, 10
-            db "Omar David Jaimes Molina - 1152263", 13, 10
-            db "Saimer Adrian Saavedra Rojas - 1152280", 13, 10, '$'
+;String logo e integrantes
+logoe db 13, 10
+      db "     |-----------------------S-I-S-T-E-M-I-C-O-S---------------------------|",13,10
+      db "     |        /     #  #%  &                                               |",13,10
+      db "     |        /     #  #%  &                                               |",13,10
+      db "     |     . (################.        -===============================-   |",13,10
+      db "     |  (((# #.(           ,  & ((((   | *********INTEGRANTES**********|   |",13,10
+      db "     |     , #          *  ,  &        |===============================|   |",13,10
+      db "     |     , #    &    &   ,  &        |                               |   |",13,10
+      db "     |  %%%% # &&  (        % & %%%%   |     JUAN AFANADOR - 1152247   |   |",13,10
+      db "     |     , #                &        |     OMAR JAIMES  - 1152263    |   |",13,10
+      db "     |     , #            . & &        |      BRYAN VERA  - 1152277    |   |",13,10
+      db "     |     , %&&&&&&&&&&&&&&&&(        |    SAIMER SAAVEDRA - 1152280  |   |",13,10
+      db "     |        /     #  #%  &           |                               |   |",13,10
+      db "     |        /     #  #%  &           '-------------------------------'   |",13,10
+      db "     |-------------------ALTA-CALIDAD-ARQUITECTURA-DE-PC-------------------|$"
 
-msg_menu db "Hola! Bienvenido a Ahorcado", 13, 10
-         db "Selecciona el tipo de objeto:", 13, 10
-         db "--------------------------------------------------------", 13, 10
-         db "----> 1. Frutas  ----> 2. Animales ----> 3. Transporte$"
+menu_option db "     |---------------------------------------------------------------------|",13,10
+            db "     |       BIENVENIDOS A AHORCADO                                        |",13,10
+            db "     |                                                   __    ___  __  __ |",13,10
+            db "     |       Elige la tematica:                         /__\  / __)(  \/  )|",13,10
+            db "     |    1. Fruta         2. Animal                   /(__)\ \__ \ )    ( |",13,10
+            db "     |          3. Transporte                         (__)(__)(___/(_/\/\_)|",13,10
+            db "     |---------------------------------------------------------------------|$"
 
 ;Strings de variables
-frutas db "manzana$", "sandia$", "mango$"
-frutas_lengths db 7, 6, 5
+frutas db "manzana$", "platano$", "fresa$", "uva$", "naranja$", "sandia$", "pera$", "kiwi$", "mango$", "cereza$"
+frutas_lengths db 7, 7, 5, 3, 7, 6, 4, 4, 5, 7
 
-animales db "perro$", "gato$", "murcielago$"
-animales_lengths db 5, 4, 10
+animales db "perro$", "gato$", "elefante$", "jirafa$", "tigre$", "cebra$", "loro$", "mono$", "koala$", "oso$"
+animales_lengths db 5, 4, 8, 6, 5, 5, 4, 4, 5, 3
 
-transportes db "carro$", "moto$", "bicicleta$"
-transportes_lengths db 5, 4, 9
+transportes db "auto$", "bicicleta$", "barco$", "avion$", "tren$", "camion$", "motocicleta$", "helicoptero$", "submarino$", "taxi$"
+transportes_lengths db 4, 9, 5, 5, 4, 6, 11, 11, 9, 4
 
 ascii_art db "          $"
           db "          $"
@@ -125,6 +139,8 @@ inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
     mov ds, ax ; Establecer ds con el segmento de datos.
     
+    call clear_screen
+
     ;;Imprimir menu
     call print_menu
 
@@ -165,7 +181,7 @@ play proc near
     call play_word
 
     ; Saltar mensaje de siguiente palabra si ya está en la ultima
-    cmp cl, 2
+    cmp cl, 9
     je play_loop_skip_next_msg
 
     ; Mostrar mensaje de siguiente palabra
@@ -180,7 +196,7 @@ play proc near
 
     ; control del ciclo
     inc cl
-    cmp cl, 3 ; Cant de palabras
+    cmp cl, 10 ; Cant de palabras
     jl play_loop
 
     pop si
@@ -248,6 +264,11 @@ char_continue:
     ; imprimir mensaje perder
     lea dx, msg_loser
     call print
+
+    ; imprimir respuesta
+    lea dx, [si]
+    call print
+
     jmp word_continue
 
 word_finished:
@@ -394,7 +415,7 @@ check_progress proc near
     mov cl, 0 ; indice del bucle
     lea bx, progress; acceder al string progress
 
-check_progress_loop:
+check_progress_loop: 
     mov al, [bx]
     cmp al, '_'
     je check_progress_false
@@ -452,8 +473,15 @@ select_option_loop:
 
     ; Lee el numero que digitado
     push dx
+
+    ; Posicionar cursor sobre la misma posicion para evitar que se desplace
+    mov dx, 1600H
+    call set_console_pos
+
+    ; Leer un caracter sin escribir mensaje
     lea dx, endstr
     call read_char 
+
     pop dx
 
     ; Compara el input con las opciones
@@ -468,18 +496,24 @@ select_option_loop:
     jmp select_option_loop
 
 select_fruta:
+    call color_fruta
+
     lea si, frutas
     lea bx, frutas_lengths
     jmp finalizar
 
-select_transporte:
-    lea si, transportes
-    lea bx, transportes_lengths
-    jmp finalizar
-
 select_animal:
+    call color_animal
+
     lea si, animales
     lea bx, animales_lengths
+    jmp finalizar
+
+select_transporte:
+    call color_transporte
+
+    lea si, transportes
+    lea bx, transportes_lengths
     jmp finalizar
 
 finalizar:
@@ -491,14 +525,16 @@ select_option endp
 print_menu proc near
     push dx
     
-    ;Imprimir integrantes
-    lea dx, msg_credits
+     ;Imprimir integrantes
+    lea dx, logoe
     call print
 
-    ; Imprimir menú
-    lea dx, msg_menu
+    lea dx, endstr
     call print
 
+    ;Imprimir menu optiones
+    lea dx, menu_option 
+    call print
     pop dx
 
     ret
@@ -522,6 +558,26 @@ print proc near
     pop ax
     ret
 print endp
+
+; Establecer posicion de la consola
+; Recibe
+; dx, posicion
+set_console_pos proc near
+    push ax
+    push bx
+    push dx
+
+    mov AH,02H; función
+    mov BH,00H; pagina actual
+    INT 10H; Interrupción
+
+    pop dx
+    pop bx
+    pop ax
+
+    ret
+set_console_pos endp
+
 
 ; Imprime el ahorcado
 ; Recibe
@@ -564,91 +620,84 @@ print_ahorcado_loop:
     ret
 print_ahorcado endp
 
-;clear_screen proc near ;procedimiento limpiar pantalla
-;    push ax
-;    push bx
-;    push cx
-;    push dx
-;
-;    mov ax,0600H ;funci¢n 06h
-;    mov bh,1bh ;N£mero de atributo(colores)
-;    mov cx,0000h ;fila y columnas iniciales
-;    mov dx,184fh ;fila y columna finales
-;    int 10h ;interrupción 10h de la BIOS
-;    
-;    pop dx
-;    pop cx
-;    pop bx
-;    pop ax
-;
-;    ret
-;clear_screen endp
+clear_screen proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
 
-;;--metodo para imprimir el valor de un registro--;;
-;	;recibe:
-;	;	ax: el numero a imprimir	
-;	printint proc near
-;		push ax
-;		push bx
-;		push cx
-;		push dx
-;		push si
-;			;; ----- INICIO DEL CODIGO DE IMPRIMIR, LO QUE QUIERA IMPRIMIR, METALO EN X
-;			mov cx, 0 ; contador de digitos
-;		to_stack: ;mete los digitos en la pila para reversarlos
-;		
-;			mov dx, 0 ; este guarda el residuo de la division
-;			inc cx ;+1 digito
-;			mov bx, 10 ;divisor
-;			
-;			div bx 
-;			push dx ;metemos ax mod 10 a la cola (dx)
-;			cmp ax, 0 ;si ax es 0, salimos
-;			jne to_stack     
-;		
-;		lea si, string
-;			
-;		to_string: ;pasa de la pila al string
-;			mov dx, 0
-;			pop dx
-;			add dx,48
-;			mov [si], dx
-;			inc si
-;			dec cx
-;			cmp cx, 0
-;			jne to_string
-;		imprimir:;imprime
-;			mov cl, '$'
-;			mov [si], cl
-;			lea dx, string
-;
-;			;output the string 
-;			;loaded in dx  
-;			mov ah,09h 
-;			int 21h  
-;
-;			;salto de linea
-;			MOV dl, 10
-;			MOV ah, 02h
-;			INT 21h
-;			MOV dl, 13
-;			MOV ah, 02h
-;			INT 21h
-;		mov cx, 10
-;		reset: ;resetea string, para almacenar el siguiente numero
-;			lea si, string
-;			mov dx, '$'
-;			mov [si], dx
-;			inc si
-;			dec cx
-;			cmp cx, 0
-;			jne reset
-;		xor cx, cx
-;		pop si
-;		pop dx
-;		pop cx
-;		pop bx
-;		pop ax
-;	ret
-;   printint endp
+    mov ax,0600H ;funci¢n 06h
+    mov bh,02h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+clear_screen endp
+
+color_fruta proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh, 70h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+color_fruta endp
+
+color_animal proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh,17h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+color_animal endp
+
+color_transporte proc near ;procedimiento limpiar pantalla
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh,27h ;N£mero de atributo(colores)
+    mov cx,0000h ;fila y columnas iniciales
+    mov dx,184fh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+color_transporte endp
+
 end
