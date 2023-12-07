@@ -9,15 +9,16 @@ progress db 32 dup ('0'), '$' ; Valores introducidos
 
 ; Strings del programa
 msg_ask_input db "Escriba una letra:$"
-msg_wrong_ans db "Letra incorrecta$"
 msg_winner db "Ganaste$"
 msg_loser db "Perdiste$"
-msg_next_word db "Presiona una tecla para jugar la siguiente palabra$"
+msg_next_word db "Presiona C para continuar con otra palabra o ESC para salir$"
+msg_end_game db "Presiona ESC para salir"
 newline db 13, 10, '$' ; Caracteres de nueva linea
 endstr db '$' ; Caracter de fin de string
+color db 02H ; Tipo de color
 
 ;String logo e integrantes
-logoe db 13, 10
+menu db 13, 10
       db "     |-----------------------S-I-S-T-E-M-I-C-O-S---------------------------|",13,10
       db "     |        /     #  #%  &                                               |",13,10
       db "     |        /     #  #%  &                                               |",13,10
@@ -31,19 +32,20 @@ logoe db 13, 10
       db "     |     , %&&&&&&&&&&&&&&&&(        |    SAIMER SAAVEDRA - 1152280  |   |",13,10
       db "     |        /     #  #%  &           |                               |   |",13,10
       db "     |        /     #  #%  &           '-------------------------------'   |",13,10
-      db "     |-------------------ALTA-CALIDAD-ARQUITECTURA-DE-PC-------------------|$"
-
-menu_option db "     |---------------------------------------------------------------------|",13,10
-            db "     |       BIENVENIDOS A AHORCADO                                        |",13,10
-            db "     |                                                   __    ___  __  __ |",13,10
-            db "     |       Elige la tematica:                         /__\  / __)(  \/  )|",13,10
-            db "     |    1. Fruta         2. Animal                   /(__)\ \__ \ )    ( |",13,10
-            db "     |          3. Transporte                         (__)(__)(___/(_/\/\_)|",13,10
-            db "     |---------------------------------------------------------------------|$"
+      db "     |-------------------ALTA-CALIDAD-ARQUITECTURA-DE-PC-------------------|",13,10
+      db "     |---------------------------------------------------------------------|",13,10
+      db "     |       BIENVENIDOS A AHORCADO                                        |",13,10
+      db "     |                                                   __    ___  __  __ |",13,10
+      db "     |       Elige la tematica:                         /__\  / __)(  \/  )|",13,10
+      db "     |    1. Fruta         2. Animal                   /(__)\ \__ \ )    ( |",13,10
+      db "     |          3. Transporte                         (__)(__)(___/(_/\/\_)|",13,10
+      db "     |                                                                     |",13,10
+      db "     |ESC. Salir                                                           |",13,10
+      db "     |---------------------------------------------------------------------|$"
 
 ;Strings de variables
 frutas db "manzana$", "platano$", "fresa$", "uva$", "naranja$", "sandia$", "pera$", "kiwi$", "mango$", "cereza$"
-frutas_lengths db 7, 7, 5, 3, 7, 6, 4, 4, 5, 7
+frutas_lengths db 7, 7, 5, 3, 7, 6, 4, 4, 5, 6
 
 animales db "perro$", "gato$", "elefante$", "jirafa$", "tigre$", "cebra$", "loro$", "mono$", "koala$", "oso$"
 animales_lengths db 5, 4, 8, 6, 5, 5, 4, 4, 5, 3
@@ -132,23 +134,30 @@ ascii_art db "          $"
           db 0BAH, 0BAH, "        $"
           db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
 
-;string db '$$'
-
 .code
 inicio proc near
     mov ax, @data ; Cargar el segmento de datos en ax.
     mov ds, ax ; Establecer ds con el segmento de datos.
     
-    call clear_screen
+    game_loop:
+    ; Limpiar la pantalla
+    mov [color], 02H
+    call select_color ; cambio
 
     ;;Imprimir menu
     call print_menu
 
     ;;Seleccionar opción
     call select_option
-    
-    ; Empezar el juego
+
+    ; Si la opción fue salir, terminar el programa
+    cmp si, 0
+    je salir
+
+    ; Si no, entonces empezar el juego
     call play
+
+    jmp game_loop
     
 salir:
     mov ax, 4C00H  ; Interrupcion de terminar
@@ -182,22 +191,53 @@ play proc near
 
     ; Saltar mensaje de siguiente palabra si ya está en la ultima
     cmp cl, 9
-    je play_loop_skip_next_msg
+    je play_loop_skip_prompt
 
+    play_loop_read_next_input: 
     ; Mostrar mensaje de siguiente palabra
+
+    ;Leer caracter
     lea dx, msg_next_word
-    call read_char
+    call read_char 
+
+    ;Esta sección realiza comparaciones de acuerdo a las teclas
+    cmp input, 1BH ; Compara si la tecla es ESC
+    je play_exit ; Si son iguales, vuelve al menú
+
+    cmp input, 63H ; Compara si la tecla es c (minúscula) para continuar
+    je play_loop_continue
     
-    play_loop_skip_next_msg:
+    cmp input, 2EH ; Comparar si la tecla es C (mayúscula) para continuar
+    je play_loop_continue
+
+    jmp play_loop_read_next_input ; Si es una tecla diferente, se repite hasta que presione C/c o ESC
+    ;FIN comparaciones
+
+    play_loop_continue:
+    call select_color ;Vuelve a seleccionar el color, limpia la pantalla
+
+    play_loop_skip_prompt:  
+    
+
     ; Pasar si a la siguiente palabra
     add si, ax
-    inc si ; Agregar un caracter más para $
+    inc si ; Agregar un caracter más para el $ al final de cada palabra
     inc bx ; Pasar bx al siguiente numero
 
     ; control del ciclo
     inc cl
     cmp cl, 10 ; Cant de palabras
     jl play_loop
+
+    play_finish_input:
+
+    ; Solicitar la tecla ESC para salir
+    lea dx, msg_end_game
+    call read_char
+    cmp input, 1BH ; Compara si la tecla es ESC
+    jne play_finish_input ; Si son iguales, se sale del juego
+
+    play_exit:
 
     pop si
     pop dx
@@ -231,9 +271,6 @@ read_word:
     ; leer caracter
     lea dx, msg_ask_input
     call read_char
-
-    ; limpiar pantalla
-    ;call clear_screen
     
     ; llenar progreso
     mov ah, input
@@ -247,13 +284,13 @@ read_word:
 char_not_found:
     ; sumar 1 al contador de fallos
     inc cl;
+    ;call clear_screen - cambio
+    call select_color ;Vuelve a seleccionar el color
 
-    ; Imprimir mensaje
-    push dx
-    lea dx, msg_wrong_ans
-    call print
-    pop dx
 char_continue:
+
+    ;call clear_screen -cambio
+    call select_color ;Vuelve a seleccionar el color
     cmp dh, 1
     je word_finished
 
@@ -261,17 +298,17 @@ char_continue:
     cmp cl, 8
     jl read_word
 
-    ; imprimir mensaje perder
-    lea dx, msg_loser
-    call print
+    ;Llenar la palabra
+    call complete_word
 
-    ; imprimir respuesta
-    lea dx, [si]
+    ; imprimir mensaje de perder
+    lea dx, msg_loser
     call print
 
     jmp word_continue
 
 word_finished:
+  
     ; imprimir mensaje ganar
     lea dx, msg_winner
     call print
@@ -295,8 +332,9 @@ play_word endp
 
 
 ; Inicializar el string de progreso
-;   lea si, palabra (ya proviene del metodo play_word)
-;   mov ch, longitud_palabra (ya proviene del metodo play_word)
+; Recibe
+;   si, palabra
+;   ch, longitud_palabra
 init_progress proc near
     push ax ; preserver el valor de ax
     push bx ; preservar el valor de bx
@@ -349,10 +387,10 @@ init_progress proc near
 init_progress endp
 
 ; Completar el progreso a medida que se escriben las letras
-;   mov ah, letra a buscar
-;   mov dx, 0
-;   mov ch, longitud_palabra (ya proviene del metodo play_word)
-;   lea si, palabra (ya proviene del metodo play_word)
+; Recibe   
+;   ah, letra a buscar
+;   ch, longitud_palabra
+;   si, palabra
 ; retorna
 ; dl se encontro la letra 
 ; dh la palabra esta completa 
@@ -367,8 +405,9 @@ fill_progress proc near
     ; bx string de progreso
     ; ah letra a buscar
     ; dl se encontro la letra 
-    ; dh la palabra esta completa 
-    
+    ; dh la palabra esta completa
+
+    mov dx, 0
     mov cl, 0
     mov di, si
     lea bx, progress;
@@ -384,7 +423,8 @@ modify_progress:
 
 continue_read_progress:
     inc di ; pasar a la siguiente letra de la palabra
-    inc bx ; pasar al siguiente caracter de progress
+    ; pasar a los siguientes dos caracteres de progress
+    inc bx
     inc bx
     ; control del bucle
     inc cl
@@ -401,9 +441,9 @@ continue_read_progress:
     ret
 fill_progress endp
 
-; Verifica si la palabra ya está completa
-; Lee el string progress
-; mov ch, longitud_palabra
+; Verifica si la palabra ya está completa leyendo el string progress
+; Recibe
+; ch, longitud_palabra
 ; retorna
 ; dh 1 si la palabra esta completa, 0 si no esta completa
 check_progress proc near
@@ -439,6 +479,31 @@ check_progress_continue:
     ret
 check_progress endp
 
+; Completa la palabra en el string progress
+complete_word proc near
+    push ax
+    push cx
+    push dx
+    push di 
+
+    mov cl, ch
+    mov di, si
+complete_word_loop:
+    mov ah, [di]
+    call fill_progress
+    
+    inc di
+    dec cl
+    cmp cl, 0
+    jg complete_word_loop
+
+    pop di
+    pop dx
+    pop cx
+    pop ax
+ret
+complete_word endp
+
 ; Leer un caracter
 ; Recibe dx, para mostrar un mensaje
 ; El valor leido se almacena en la variable input
@@ -447,6 +512,7 @@ read_char proc near
 
     call print
 
+    lecturaInput:
     mov ax, 0100H ; Leer por consola
     int 21H; llamar al SO
     mov [input], al ; almacenar input
@@ -465,8 +531,8 @@ read_char endp
 
 ;Obtiene la opcion que digite el usuario
 ; retorna
-; si, arreglo de cadenas
-; bx, arreglo de longitudes
+; si, arreglo de cadenas, 0 cuando se selecciona salir
+; bx, arreglo de longitudes, 0 cuando se selecciona salir
 select_option proc near
 
 select_option_loop:
@@ -493,56 +559,61 @@ select_option_loop:
 
     cmp input, '3'
     je select_transporte
+
+    cmp input, 1BH ; TECLA ESCAPE / ESC
+    je select_exit
+
     jmp select_option_loop
 
 select_fruta:
-    call color_fruta
+    mov color, 70h
+    call select_color
 
     lea si, frutas
     lea bx, frutas_lengths
     jmp finalizar
 
 select_animal:
-    call color_animal
+    mov color, 17h
+    call select_color
 
     lea si, animales
     lea bx, animales_lengths
     jmp finalizar
 
 select_transporte:
-    call color_transporte
+    mov color, 27h
+    call select_color
 
     lea si, transportes
     lea bx, transportes_lengths
     jmp finalizar
+
+select_exit:
+    mov si, 0
+    mov bx, 0
 
 finalizar:
 
     ret
 select_option endp
 
-;Imprimir el menu
+;Imprimir el menú
 print_menu proc near
     push dx
     
-     ;Imprimir integrantes
-    lea dx, logoe
+    ;Imprimir Menú
+    lea dx, menu
     call print
 
-    lea dx, endstr
-    call print
-
-    ;Imprimir menu optiones
-    lea dx, menu_option 
-    call print
     pop dx
 
     ret
 print_menu endp
 
-; Imprimir en consola
-;    lea dx, texto
-;    call print
+; Imprimir un texto en consola
+; Recibe 
+; dx, texto
 print proc near
     push ax
     push dx
@@ -620,84 +691,25 @@ print_ahorcado_loop:
     ret
 print_ahorcado endp
 
-clear_screen proc near ;procedimiento limpiar pantalla
+; Limpiar la pantalla y cambiar su color
+; El color lo lee desde la variable color
+select_color proc near
     push ax
     push bx
     push cx
     push dx
 
-    mov ax,0600H ;funci¢n 06h
-    mov bh,02h ;N£mero de atributo(colores)
-    mov cx,0000h ;fila y columnas iniciales
-    mov dx,184fh ;fila y columna finales
-    int 10h ;interrupción 10h de la BIOS
+    mov ax,0600H ; Función 06h
+    mov bh,[color] ;Número de atributo(colores)
+    mov cx,0000h ; fila y columna inicial
+    mov dx,184fh ; fila y columna final
+    int 10h ; interrupción 10h de la BIOS
     
     pop dx
     pop cx
     pop bx
     pop ax
-
     ret
-clear_screen endp
-
-color_fruta proc near ;procedimiento limpiar pantalla
-    push ax
-    push bx
-    push cx
-    push dx
-
-    mov ax,0600H ;funci¢n 06h
-    mov bh, 70h ;N£mero de atributo(colores)
-    mov cx,0000h ;fila y columnas iniciales
-    mov dx,184fh ;fila y columna finales
-    int 10h ;interrupción 10h de la BIOS
-    
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-
-    ret
-color_fruta endp
-
-color_animal proc near ;procedimiento limpiar pantalla
-    push ax
-    push bx
-    push cx
-    push dx
-
-    mov ax,0600H ;funci¢n 06h
-    mov bh,17h ;N£mero de atributo(colores)
-    mov cx,0000h ;fila y columnas iniciales
-    mov dx,184fh ;fila y columna finales
-    int 10h ;interrupción 10h de la BIOS
-    
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-
-    ret
-color_animal endp
-
-color_transporte proc near ;procedimiento limpiar pantalla
-    push ax
-    push bx
-    push cx
-    push dx
-
-    mov ax,0600H ;funci¢n 06h
-    mov bh,27h ;N£mero de atributo(colores)
-    mov cx,0000h ;fila y columnas iniciales
-    mov dx,184fh ;fila y columna finales
-    int 10h ;interrupción 10h de la BIOS
-    
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-
-    ret
-color_transporte endp
+select_color endp
 
 end
