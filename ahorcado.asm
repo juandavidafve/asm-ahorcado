@@ -9,13 +9,30 @@ progress db 32 dup ('0'), '$' ; Valores introducidos
 
 ; Strings del programa
 msg_ask_input db "Escriba una letra:$"
-msg_winner db "Ganaste$"
-msg_loser db "Perdiste$"
+msg_ask_string db "Ingrese una palabra (Sin tildes):$"
+msg_winner db "     ___       __   ___  ________   ________   _______   ________ ",13,10
+           db "         |\  \     |\  \|\  \|\   ___  \|\   ___  \|\  ___ \ |\   __  \",13,10
+           db "         \ \  \    \ \  \ \  \ \  \\ \  \ \  \\ \  \ \   __/|\ \  \|\  \",13,10
+           db "          \ \  \  __\ \  \ \  \ \  \\ \  \ \  \\ \  \ \  \_|/_\ \   _  _\",13,10
+           db "           \ \  \|\__\_\  \ \  \ \  \\ \  \ \  \\ \  \ \  \_|\ \ \  \\  \|",13,10
+           db "            \ \____________\ \__\ \__\\ \__\ \__\\ \__\ \_______\ \__\\ _\",13,10
+           db "             \|____________|\|__|\|__| \|__|\|__| \|__|\|_______|\|__|\|__|",13,10
+           db "$"
+msg_loser db "               :::        ::::::::   ::::::::  :::::::::: :::::::::",13,10
+          db "                   :+:       :+:    :+: :+:    :+: :+:        :+:    :+:",13,10
+          db "                  +:+       +:+    +:+ +:+        +:+        +:+    +:+",13,10
+          db "                 +#+       +#+    +:+ +#++:++#++ +#++:++#   +#++:++#:",13,10
+          db "               +#+       +#+    +#+        +#+ +#+        +#+    +#+",13,10          
+          db "              #+#       #+#    #+# #+#    #+# #+#        #+#    #+#",13,10
+          db "             ########## ########   ########  ########## ###    ###", 13, 10
+          db "$"
 msg_next_word db "Presiona C para continuar con otra palabra o ESC para salir$"
-msg_end_game db "Presiona ESC para salir"
+msg_end_game db "Presiona ESC para salir$"
 newline db 13, 10, '$' ; Caracteres de nueva linea
 endstr db '$' ; Caracter de fin de string
 color db 02H ; Tipo de color
+color_finish db '$' ; variable color para finish
+conteo db 0 ; Contar de letras de una cadena
 
 ;String logo e integrantes
 menu db 13, 10
@@ -38,20 +55,22 @@ menu db 13, 10
       db "     |                                                   __    ___  __  __ |",13,10
       db "     |       Elige la tematica:                         /__\  / __)(  \/  )|",13,10
       db "     |    1. Fruta         2. Animal                   /(__)\ \__ \ )    ( |",13,10
-      db "     |          3. Transporte                         (__)(__)(___/(_/\/\_)|",13,10
+      db "     |    3. Transporte    4. Palabra libre           (__)(__)(___/(_/\/\_)|",13,10
       db "     |                                                                     |",13,10
       db "     |ESC. Salir                                                           |",13,10
       db "     |---------------------------------------------------------------------|$"
 
 ;Strings de variables
-frutas db "manzana$", "platano$", "fresa$", "uva$", "naranja$", "sandia$", "pera$", "kiwi$", "mango$", "cereza$"
-frutas_lengths db 7, 7, 5, 3, 7, 6, 4, 4, 5, 6
+frutas db "manzana$", "platano$", "fresa$", "uva$", "naranja$", "sandia$", "pera$", "kiwi$", "mango$", "cereza$", "mandarina$", "coco$", "almendra$", "frambuesa$", "papaya$", "mora$", "higo$", "toronja$", "guayaba$", "pitaya$" 
+frutas_lengths db 7, 7, 5, 3, 7, 6, 4, 4, 5, 6, 9, 4, 8, 9, 6, 4, 4, 7, 7, 6
 
-animales db "perro$", "gato$", "elefante$", "jirafa$", "tigre$", "cebra$", "loro$", "mono$", "koala$", "oso$"
-animales_lengths db 5, 4, 8, 6, 5, 5, 4, 4, 5, 3
+animales db "perro$", "gato$", "elefante$", "jirafa$", "tigre$", "cebra$", "loro$", "mono$", "koala$", "oso$", "medusa$", "almeja$", "liebre$", "avestruz$", "tarantula$", "venado$", "cachalote$", "foca$", "calamar$", "mandril$"
+animales_lengths db 5, 4, 8, 6, 5, 5, 4, 4, 5, 3, 6, 6, 6, 8, 9, 6, 9, 4, 7, 7
 
-transportes db "auto$", "bicicleta$", "barco$", "avion$", "tren$", "camion$", "motocicleta$", "helicoptero$", "submarino$", "taxi$"
-transportes_lengths db 4, 9, 5, 5, 4, 6, 11, 11, 9, 4
+transportes db "auto$", "bicicleta$", "barco$", "avion$", "tren$", "camion$", "motocicleta$", "helicoptero$", "submarino$", "taxi$", "metro$", "tractor$", "kayak$", "teleferico$", "lancha$", "tanque$", "skate$", "dirigible$", "ferry$", "furgoneta$"
+transportes_lengths db 4, 9, 5, 5, 4, 6, 11, 11, 9, 4, 5, 7, 5, 10, 6, 6, 5, 9, 5, 9
+
+free_word db 16 dup (0), 0 ; Para palabra libre
 
 ascii_art db "          $"
           db "          $"
@@ -112,7 +131,7 @@ ascii_art db "          $"
           db 0BAH, 0BAH, "        $"
           db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
           db 0BAH, 0BAH, "      ", 0B3H, " $"
-          db 0BAH, 0BAH, "      ", 02FH , " $"
+          db 0BAH, 0BAH, "     ", 02FH , "  $"
           db 0BAH, 0BAH, "        $"
           db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
           ;
@@ -121,7 +140,7 @@ ascii_art db "          $"
           db 0BAH, 0BAH, "        $"
           db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
           db 0BAH, 0BAH, "      ", 0B3H, " $"
-          db 0BAH, 0BAH, "      ", 02FH , 05CH , '$'
+          db 0BAH, 0BAH, "     ", 02FH , " ", 05CH , '$'
           db 0BAH, 0BAH, "        $"
           db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
           ;
@@ -130,7 +149,7 @@ ascii_art db "          $"
           db 0BAH, 0BAH, "      ", 'O', " $"
           db 0BAH, 0BAH, "     ", 02FH , 0B3H, 05CH , '$'
           db 0BAH, 0BAH, "      ", 0B3H, " $"
-          db 0BAH, 0BAH, "      ", 02FH , 05CH , '$'
+          db 0BAH, 0BAH, "     ", 02FH , " ", 05CH , '$'
           db 0BAH, 0BAH, "        $"
           db 0CAH, 0CAH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, 0CDH, '$'
 
@@ -155,16 +174,107 @@ inicio proc near
     je salir
 
     ; Si no, entonces empezar el juego
-    call play
-
-    jmp game_loop
+    cmp input, '4'
+    je jugarLibre
     
+    jmp jugarCadenas
+
+    jugarLibre:
+    call play_free
+    jmp presalir
+
+    jugarCadenas:
+    call play
+    
+presalir:
+    call clean_string
+    jmp game_loop
+
 salir:
+    
+
     mov ax, 4C00H  ; Interrupcion de terminar
     int 21H        ; Llamada a la interrupcion
 
 inicio endp
 
+; -- MÉTODO: INICIALIZAR JUEGO --
+; Este método inicia el juego solo cuando es palabra libre
+; No se devuelve al menú
+play_free proc near
+
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+
+    play_loopFREE:
+    ; Guardar el valor de bx en ax
+    mov ax, [bx]
+    mov ah, 0
+
+    ; Mover a ch la cant de letras en la palabra
+    mov ch, al
+    call play_word
+
+    lea dx, msg_next_word 
+    call print ;Imprime el mensaje de continuar (C) o EXIT
+    
+    lea dx, endstr
+    call print
+    play_loop_read_next_inputFREE: 
+    ; Mostrar mensaje de siguiente palabra
+
+    ;Leer caracter (No imprime, solo lee)
+    mov dx, 1800H
+    call set_console_pos
+
+    call read_onlychar 
+    
+    ;Esta sección realiza comparaciones de acuerdo a las teclas
+    cmp input, 1BH ; Compara si la tecla es ESC
+    je play_exitFREE ; Si son iguales, vuelve al menú
+
+    cmp input, 63H ; Compara si la tecla es c (minúscula) para continuar
+    je play_loop_continueFREE
+    
+    cmp input, 2EH ; Comparar si la tecla es C (mayúscula) para continuar
+    je play_loop_continueFREE
+
+    jmp play_loop_read_next_inputFREE ; Si es una tecla diferente, se repite hasta que presione C/c o ESC
+    ;FIN comparaciones
+
+    play_loop_continueFREE:
+    call select_color ;Vuelve a seleccionar el color, limpia la pantalla
+    call clean_string
+
+    ; Como el método no se devuelve al menú, debe leer la cadena y contar la misma aquí
+    lea dx, msg_ask_string
+    call print 
+
+    lea dx, endstr
+    call print
+
+    call read_string
+    call count_string
+
+    call select_color ;Vuelve a seleccionar el color, limpia la pantalla
+
+    jmp play_loopFREE
+
+    play_exitFREE:
+
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+play_free endp
+
+; -- MÉTODO: INICIALIZAR JUEGO --
 ; Inicia el juego, itera cada palabra de una categoria
 ; Recibe
 ; si, arreglo de strings
@@ -190,16 +300,21 @@ play proc near
     call play_word
 
     ; Saltar mensaje de siguiente palabra si ya está en la ultima
-    cmp cl, 9
+    cmp cl, 19
     je play_loop_skip_prompt
 
+    lea dx, msg_next_word 
+    call print ;Imprime el mensaje de continuar (C) o EXIT
+    
     play_loop_read_next_input: 
     ; Mostrar mensaje de siguiente palabra
 
-    ;Leer caracter
-    lea dx, msg_next_word
-    call read_char 
+    ;Leer caracter (No imprime, solo lee)
+    mov dx, 1800H
+    call set_console_pos
 
+    call read_onlychar 
+    
     ;Esta sección realiza comparaciones de acuerdo a las teclas
     cmp input, 1BH ; Compara si la tecla es ESC
     je play_exit ; Si son iguales, vuelve al menú
@@ -226,7 +341,7 @@ play proc near
 
     ; control del ciclo
     inc cl
-    cmp cl, 10 ; Cant de palabras
+    cmp cl, 20 ; Cant de palabras
     jl play_loop
 
     play_finish_input:
@@ -247,6 +362,7 @@ play proc near
 ret
 play endp
 
+; -- MÉTODO: JUGAR CON PALABRA --
 ; Jugar con una palabra
 ; lea si, palabra
 ; mov ch, longitud
@@ -302,6 +418,10 @@ char_continue:
     call complete_word
 
     ; imprimir mensaje de perder
+    mov color_finish, 04h ;cambia color font rojo
+    call select_color_finish
+    mov dx,0405h
+    call ubicar
     lea dx, msg_loser
     call print
 
@@ -310,6 +430,10 @@ char_continue:
 word_finished:
   
     ; imprimir mensaje ganar
+    mov color_finish, 06h ;cambia color font amarrillo
+    call select_color_finish
+    mov dx,0405h
+    call ubicar
     lea dx, msg_winner
     call print
 
@@ -330,7 +454,7 @@ word_continue:
     ret
 play_word endp
 
-
+; -- MÉTODO: INICIALIZAR STRING PROGRESO --
 ; Inicializar el string de progreso
 ; Recibe
 ;   si, palabra
@@ -386,6 +510,7 @@ init_progress proc near
     ret
 init_progress endp
 
+; -- MÉTODO: COMPLETAR PROGRESO --
 ; Completar el progreso a medida que se escriben las letras
 ; Recibe   
 ;   ah, letra a buscar
@@ -441,6 +566,7 @@ continue_read_progress:
     ret
 fill_progress endp
 
+; -- MÉTODO: VERIFICAR PALABRA --
 ; Verifica si la palabra ya está completa leyendo el string progress
 ; Recibe
 ; ch, longitud_palabra
@@ -479,6 +605,7 @@ check_progress_continue:
     ret
 check_progress endp
 
+; -- MÉTODO: COMPLETAR PALABRA --
 ; Completa la palabra en el string progress
 complete_word proc near
     push ax
@@ -504,15 +631,16 @@ complete_word_loop:
 ret
 complete_word endp
 
-; Leer un caracter
+; -- MÉTODO: LEER CARACTER --
+; Leer un caracter (Imprime primero un mensaje)
 ; Recibe dx, para mostrar un mensaje
 ; El valor leido se almacena en la variable input
 read_char proc near
-    push ax
-
+    
     call print
 
-    lecturaInput:
+    push ax
+
     mov ax, 0100H ; Leer por consola
     int 21H; llamar al SO
     mov [input], al ; almacenar input
@@ -525,10 +653,74 @@ read_char proc near
     pop dx
 
     pop ax
+
     ret
 
 read_char endp
 
+; -- MÉTODO: LEER CARACTER --
+; Leer un caracter (No imprime)
+read_onlychar proc near
+
+    push ax
+
+    mov ax, 0100H ; Leer por consola
+    int 21H; llamar al SO
+    mov [input], al ; almacenar input
+
+    pop ax
+
+    ret
+read_onlychar endp
+
+; -- MÉTODO: LEER CADENA --
+;Lee una cadena
+read_string proc near
+    push ax
+    push si
+
+    mov si, 0
+
+    leerCadena:
+    mov ax, 0100H ; Leer por consola
+    int 21H; llamar al SO
+
+    ; Comprobar si el carácter es una letra (mayúscula o minúscula)
+    cmp al, 0dh
+    je finRead
+
+    cmp al, 'A'
+    jl  leerCadena
+
+    cmp al, 'Z'
+    jle minuscula
+
+    cmp al, 'a'
+    jl  leerCadena
+
+    cmp al, 'z'
+    jle copiarDato
+
+    ;jmp not_letter
+
+    minuscula:
+    ;add al, 32
+    ;or al, 00100000B ; Otra forma de pasar a minúscula
+
+    copiarDato:
+    mov free_word[si], al ; almacenar input
+    inc si
+    jmp leerCadena
+
+    
+    finRead:
+    pop si
+    pop ax
+    ret
+
+read_string endp
+
+; -- MÉTODO: SELECCIONAR OPCIÓN --
 ;Obtiene la opcion que digite el usuario
 ; retorna
 ; si, arreglo de cadenas, 0 cuando se selecciona salir
@@ -545,8 +737,10 @@ select_option_loop:
     call set_console_pos
 
     ; Leer un caracter sin escribir mensaje
-    lea dx, endstr
-    call read_char 
+    lea dx, newline
+
+    call print
+    call read_onlychar 
 
     pop dx
 
@@ -560,6 +754,22 @@ select_option_loop:
     cmp input, '3'
     je select_transporte
 
+    cmp input, '4' ;Palabra libre
+    je leerString
+    jmp seguir
+
+    leerString: ; Leer el string
+    lea dx, newline
+    call print
+
+    lea dx, msg_ask_string
+    call print
+    call read_string
+
+    ;cmp input, '4' ;Seleccionar palabra libre
+    je select_libre
+
+    seguir:
     cmp input, 1BH ; TECLA ESCAPE / ESC
     je select_exit
 
@@ -571,6 +781,7 @@ select_fruta:
 
     lea si, frutas
     lea bx, frutas_lengths
+
     jmp finalizar
 
 select_animal:
@@ -579,6 +790,7 @@ select_animal:
 
     lea si, animales
     lea bx, animales_lengths
+
     jmp finalizar
 
 select_transporte:
@@ -587,6 +799,17 @@ select_transporte:
 
     lea si, transportes
     lea bx, transportes_lengths
+
+    jmp finalizar
+
+select_libre:
+    mov color, 37h
+    call select_color
+
+    lea si, free_word
+    call count_string
+    lea bx, conteo
+
     jmp finalizar
 
 select_exit:
@@ -598,6 +821,7 @@ finalizar:
     ret
 select_option endp
 
+; -- MÉTODO: IMPRIMIR MENÚ --
 ;Imprimir el menú
 print_menu proc near
     push dx
@@ -611,6 +835,7 @@ print_menu proc near
     ret
 print_menu endp
 
+; -- MÉTODO: IMPRIMIR TEXTO CONSOLA --
 ; Imprimir un texto en consola
 ; Recibe 
 ; dx, texto
@@ -630,6 +855,7 @@ print proc near
     ret
 print endp
 
+; -- MÉTODO: ESTABLECER POSICIÓN CONSOLA --
 ; Establecer posicion de la consola
 ; Recibe
 ; dx, posicion
@@ -649,7 +875,7 @@ set_console_pos proc near
     ret
 set_console_pos endp
 
-
+; -- MÉTODO: IMPRIMIR AHORCADO --
 ; Imprime el ahorcado
 ; Recibe
 ; ah contador de errores
@@ -691,6 +917,7 @@ print_ahorcado_loop:
     ret
 print_ahorcado endp
 
+; -- MÉTODO: SELECCIONAR COLOR --
 ; Limpiar la pantalla y cambiar su color
 ; El color lo lee desde la variable color
 select_color proc near
@@ -712,4 +939,92 @@ select_color proc near
     ret
 select_color endp
 
+; -- MÉTODO: SELECCIONAR COLOR WINNER/LOSER --
+; Limpiar la pantalla y cambiar su color
+; El color lo lee desde la variable color_finish
+select_color_finish proc near
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov ax,0600H ;funci¢n 06h
+    mov bh,[color_finish] ;N£mero de atributo(colores)
+    mov cx,0405h ;fila y columnas iniciales
+    mov dx,0A4Bh ;fila y columna finales
+    int 10h ;interrupción 10h de la BIOS
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+select_color_finish endp
+
+; -- MÉTODO: LIMPIAR STRING --
+;Limpiar un string (Lo llena de ceros (0))
+clean_string proc near
+
+    push ax
+    push cx
+    push dx
+
+    mov cx, 16      ; Longitud del buffer
+    lea di, free_word ; Puntero al buffer
+    xor al, al          ; Valor cero (0)
+    
+    clean_loop:
+    mov [di], al ;(0)   ; Sobrescribir el byte actual con cero
+    inc di          ; Mover al siguiente byte
+    loop clean_loop ; Repetir hasta que se limpie toda la cadena
+
+    pop dx
+    pop cx
+    pop ax
+
+    ret
+clean_string endp
+
+; -- MÉTODO: CONTAR LETRAS --
+;Contar letras de una cadena
+count_string proc near
+
+    push ax
+    push cx
+    push si
+
+    lea si, free_word   ; Cargar la dirección efectiva de la cadena en si
+    mov cx, 16        ; Longitud de cadena
+    mov conteo, 0       ; Inicializar el conteo de letras
+    
+    count_letters:
+        mov al, [si]    ; Cargar el byte actual de la cadena en al
+        cmp al, 0       ; Comprobar si es el final de la cadena
+        je  end_count   ; Si es el final, salir del bucle
+        
+        inc conteo  ; Incrementar el conteo de letras
+        inc si      ; Mover al siguiente byte
+
+        loop count_letters ; Repetir hasta el final de la cadena
+
+        end_count:
+
+        pop si
+        pop cx
+        pop ax
+    ret
+count_string endp
+
+UBICAR proc near 
+push ax
+push bx
+
+  mov ah,02h           	   
+  mov bh,00h            	   
+  int 10h
+
+pop bx
+pop ax                	
+  ret                   		   
+UBICAR endp  
 end
