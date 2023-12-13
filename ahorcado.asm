@@ -237,10 +237,10 @@ play_free proc near
     cmp input, 1BH ; Compara si la tecla es ESC
     je play_exitFREE ; Si son iguales, vuelve al menú
 
-    cmp input, 63H ; Compara si la tecla es c (minúscula) para continuar
+    cmp input, 'c' ; Compara si la tecla es c (minúscula) para continuar
     je play_loop_continueFREE
     
-    cmp input, 2EH ; Comparar si la tecla es C (mayúscula) para continuar
+    cmp input, 'C' ; Comparar si la tecla es C (mayúscula) para continuar
     je play_loop_continueFREE
 
     jmp play_loop_read_next_inputFREE ; Si es una tecla diferente, se repite hasta que presione C/c o ESC
@@ -320,10 +320,10 @@ play proc near
     cmp input, 1BH ; Compara si la tecla es ESC
     je play_exit ; Si son iguales, vuelve al menú
 
-    cmp input, 63H ; Compara si la tecla es c (minúscula) para continuar
+    cmp input, 'c' ; Compara si la tecla es c (minúscula) para continuar
     je play_loop_continue
     
-    cmp input, 2EH ; Comparar si la tecla es C (mayúscula) para continuar
+    cmp input, 'C' ; Comparar si la tecla es C (mayúscula) para continuar
     je play_loop_continue
 
     jmp play_loop_read_next_input ; Si es una tecla diferente, se repite hasta que presione C/c o ESC
@@ -765,6 +765,17 @@ read_char proc near
 
     mov ax, 0100H ; Leer por consola
     int 21H; llamar al SO
+
+    ; Si es una letra mayúscula, convertirla a minúscula
+    cmp al, 'A'
+    jl read_char_continue
+    cmp al, 'Z'
+    jg read_char_continue
+
+    add al, 32; Convertir de mayúscua a minúscula
+
+    read_char_continue:
+
     mov [input], al ; almacenar input
 
     ; imprimir salto de linea
@@ -772,8 +783,8 @@ read_char proc near
     lea dx, newline ; almacenar mensaje
     mov ax, 0900H ; Escribir nueva linea
     int 21H; llamar al SO
-    pop dx
 
+    pop dx
     pop ax
 
     ret
