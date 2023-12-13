@@ -6,6 +6,9 @@
 .data
 input db ?, '$'; Almacenar el input
 progress db 32 dup ('0'), '$' ; Valores introducidos
+characters db 18 dup ('0'), 13, 10
+           db 18 dup ('0'), 13, 10
+           db 16 dup ('0'), '$', '$'  ; Alfabeto, letras disponibles
 
 ; Strings del programa
 msg_ask_input db "Escriba una letra:$"
@@ -191,8 +194,6 @@ presalir:
     jmp game_loop
 
 salir:
-    
-
     mov ax, 4C00H  ; Interrupcion de terminar
     int 21H        ; Llamada a la interrupcion
 
@@ -373,6 +374,7 @@ play_word proc near
 
     mov cl, 0 ; definir el contador de errores en 0
     call init_progress ; inicializar el string de progreso
+    call init_characters ; inicializar el string de letras del alfabeto
 
 read_word:
 
@@ -384,10 +386,38 @@ read_word:
     mov ah, cl
     call print_ahorcado
 
+    ; Imprimir salto de linea
+    lea dx, newline
+    call print
+
+    ; Imprimir las letras disponibles
+    lea dx, characters
+    call print
+
+    ; Imprimir salto de linea
+    lea dx, newline
+    call print
+    
     ; leer caracter
     lea dx, msg_ask_input
     call read_char
     
+    jmp play_word_check_input
+
+    ; Ignorar cuando la letra es diferente de a-z
+    play_word_ignore_input:
+    mov dx, 1600H
+    call set_console_pos
+    
+    lea dx, endstr
+    call read_char
+
+    play_word_check_input:
+    cmp input, 'a'
+    jl play_word_ignore_input
+    cmp input, 'z'
+    jg play_word_ignore_input
+
     ; llenar progreso
     mov ah, input
     mov dx, 0
@@ -398,14 +428,21 @@ read_word:
     jmp char_continue
 
 char_not_found:
-    ; sumar 1 al contador de fallos
-    inc cl;
-    ;call clear_screen - cambio
+    ; Eliminar caracter de los disponibles
+    call remove_char
+    ; dl pasa a ser 1 si el caracter se ha escrito previamente
+
+    ; No sumar al contador de fallos si el caracter ya ha sido marcado
+    cmp dl, 0
+    je char_continue
+
+    inc cl ; sumar 1 al contador de fallos
     call select_color ;Vuelve a seleccionar el color
 
 char_continue:
+    ; Eliminar caracter de los disponibles
+    call remove_char
 
-    ;call clear_screen -cambio
     call select_color ;Vuelve a seleccionar el color
     cmp dh, 1
     je word_finished
@@ -453,6 +490,52 @@ word_continue:
     
     ret
 play_word endp
+
+; -- MÉTODO: INICIALIZAR STRING CON LETRAS DEL ALFABETO --
+; Llena el string characters con las letras del alfabeto. Este string lleva registro de las teclas presionadas
+init_characters proc near
+    push ax
+    push bx
+    push cx
+    push si
+
+    lea si, characters ; Cargar la cadena de caracteres disponibles
+    mov cx, 26 ; Hay 26 letras en el alfabeto
+    mov ax, " a"; 'a' se almacena en ah y ' ' se almacena en al
+
+    loop_char_srt:
+    mov [si], ax ; modificar el string
+
+    inc al ; aumentar el valor ascii
+
+    ; Si la letra es j o s, hacer un salto de linea, si no, continua el bucle
+    cmp al, 'j'
+    je loop_char_srt_break_line
+    cmp al, 's'
+    je loop_char_srt_break_line
+    jmp loop_char_srt_skip_break_line
+
+    loop_char_srt_break_line:
+    mov bx, 10
+    inc si
+    mov [si], bx
+
+    mov bx, 13
+    inc si
+    mov [si], bx
+
+    loop_char_srt_skip_break_line:
+    ; Pasar a las siguientes dos posiciones de si, una para la letra y otra para el espacio
+    inc si
+    inc si
+    loop loop_char_srt
+
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    ret
+init_characters endp
 
 ; -- MÉTODO: INICIALIZAR STRING PROGRESO --
 ; Inicializar el string de progreso
@@ -509,6 +592,45 @@ init_progress proc near
 
     ret
 init_progress endp
+
+; Eliminar la letra introducida de la lista de letras disponibles
+; Recibe   
+;   ah, letra a buscar
+; retorna
+;   dl se encontro la letra, 0 o 1
+remove_char proc near 
+    push bx
+    push cx
+    push si
+
+    lea si, characters ; Cargar la cadena de caracteres disponibles
+    mov cx, 56 ; Hay 56 espacios en el string characters
+    mov dl, 0
+
+    remove_char_loop:
+    ; Comparar si el caracter actual y el que se buscan son iguales
+    cmp [si], ah
+    jne next_remove_char_loop
+
+    ; Si son iguales, modificarlo
+    mov bx, [si]
+    mov bl, 'X'
+
+    mov [si], bx
+    mov dl, 1
+
+    next_remove_char_loop:
+    ; Pasar a las siguiente posiciones de si
+    inc si
+    loop remove_char_loop
+
+    pop si
+    pop cx
+    pop bx
+
+    ret 
+remove_char endp
+
 
 ; -- MÉTODO: COMPLETAR PROGRESO --
 ; Completar el progreso a medida que se escriben las letras
