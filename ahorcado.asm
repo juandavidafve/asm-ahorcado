@@ -864,10 +864,10 @@ read_string proc near
     copiarDato:
     mov free_word[si], al ; almacenar input
     inc si
+    inc conteo
     jmp seguirRead
 
     seguirRead:
-    inc conteo
     jmp leerCadena
 
     
