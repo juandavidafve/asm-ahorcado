@@ -31,6 +31,8 @@ msg_loser db "               :::        ::::::::   ::::::::  :::::::::: ::::::::
           db "$"
 msg_next_word db "Presiona C para continuar con otra palabra o ESC para salir$"
 msg_end_game db "Presiona ESC para salir$"
+msg_error_length db "Error: La palabra tiene m", 160, "s de 16 caracteres"
+
 newline db 13, 10, '$' ; Caracteres de nueva linea
 endstr db '$' ; Caracter de fin de string
 color db 02H ; Tipo de color
@@ -250,6 +252,7 @@ play_free proc near
     call select_color ;Vuelve a seleccionar el color, limpia la pantalla
     call clean_string
 
+    leerCadenaFREE:
     ; Como el método no se devuelve al menú, debe leer la cadena y contar la misma aquí
     lea dx, msg_ask_string
     call print 
@@ -258,7 +261,21 @@ play_free proc near
     call print
 
     call read_string
-    call count_string
+    
+    cmp conteo, 16 ; Compara conteo con 16 (longitud máxima)
+    ja error ; Si es mayor, lanza mensaje de error
+    jmp seguirCadena
+
+    error:
+    call select_color ;Limpia pantalla
+    call clean_string ;Limpia la cadena
+    lea dx, msg_error_length ; Lanza mensaje de error
+    call print
+
+    jmp leerCadenaFREE ; Vuelve a leer otra cadena de nuevo
+
+    ;call count_string
+    seguirCadena:
 
     call select_color ;Vuelve a seleccionar el color, limpia la pantalla
 
@@ -813,6 +830,7 @@ read_string proc near
     push si
 
     mov si, 0
+    mov conteo, 0
 
     leerCadena:
     mov ax, 0100H ; Leer por consola
@@ -822,14 +840,17 @@ read_string proc near
     cmp al, 0dh
     je finRead
 
+    cmp conteo, 16
+    ja seguirRead
+
     cmp al, 'A'
-    jl  leerCadena
+    jl  seguirRead
 
     cmp al, 'Z'
     jle minuscula
 
     cmp al, 'a'
-    jl  leerCadena
+    jl  seguirRead
 
     cmp al, 'z'
     jle copiarDato
@@ -837,12 +858,16 @@ read_string proc near
     ;jmp not_letter
 
     minuscula:
-    ;add al, 32
+    add al, 32
     ;or al, 00100000B ; Otra forma de pasar a minúscula
 
     copiarDato:
     mov free_word[si], al ; almacenar input
     inc si
+    jmp seguirRead
+
+    seguirRead:
+    inc conteo
     jmp leerCadena
 
     
@@ -891,10 +916,11 @@ select_option_loop:
     je leerString
     jmp seguir
 
-    leerString: ; Leer el string
+    leerString: ; Leer el string (Realiza doble de salto de línea)
     lea dx, newline
     call print
 
+    askString: ; Leer el string (Sin doble salto de línea)
     lea dx, msg_ask_string
     call print
     call read_string
@@ -936,12 +962,26 @@ select_transporte:
     jmp finalizar
 
 select_libre:
+
+    cmp conteo, 16 ; Realiza la comparación entre conteo y 16
+    ja errorSelect ; Si es mayor lanza error
+    jmp seguirSelectLibre ; Si no hay error, sigue el proceso
+
+    errorSelect: ; Momento de error
+    call clean_string ; Limpia la cadena
+
+    lea dx, msg_error_length
+    call print ; Imprime mensaje de error
+    jmp askString ; Vuelve a leer una cadena
+
+    seguirSelectLibre: ; Sigue el proceso
     mov color, 37h
     call select_color
 
     lea si, free_word
-    call count_string
+    ;call count_string
     lea bx, conteo
+
 
     jmp finalizar
 
